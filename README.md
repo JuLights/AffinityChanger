@@ -1,5 +1,7 @@
-# AffinityChanger
+# Remove Mouse Delay in csgo
 # Recommended to have more than 4 Logical Processor(Threads).
+
+# program gives csgo all core except 0 and faceitclient 0 core, CPU 0 is the heaviest because windows is using many processes on this core so if you separate faceit Anti-cheat from csgo's core you get a smoother experience and 1-in-1 mouse tracking in csgo.
 
 [Youtube Video](https://www.youtube.com/watch?v=sOJxhl7NiVM&ab_channel=JuIzNoGoud)
 
