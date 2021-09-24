@@ -1,5 +1,5 @@
 # AffinityChanger
-#Recommended to have more than 4 Logical Processor(Threads).
+# Recommended to have more than 4 Logical Processor(Threads).
 
 [Youtube Video](https://www.youtube.com/watch?v=sOJxhl7NiVM&ab_channel=JuIzNoGoud)
 
