@@ -14,8 +14,16 @@ namespace AffinityChanger
 {
     public partial class Form1 : Form
     {
+        private IntPtr totalPCCore = (IntPtr)0;
+
+        private IntPtr totalCSGOAffinity = (IntPtr)0; // allCore for real
+        private IntPtr totalFaceitAffinity = (IntPtr)0; // allCore for real
+
         public Form1()
         {
+            Process[] ProcCSGO = Process.GetProcessesByName("csgo");
+            totalPCCore = ProcCSGO[0].ProcessorAffinity;
+
             InitializeComponent();
         }
 
@@ -24,19 +32,12 @@ namespace AffinityChanger
             var powershell = PowerShell.Create();
             Process[] ProcCSGO = Process.GetProcessesByName("csgo");
 
-
-            IntPtr preferedCores = GetSystemCoreCount(false);  //for csgo every core except 0;
-            IntPtr allCore = GetSystemCoreCount(true);  //for comparison
-
             if (ProcCSGO.Length != 0)
             {
-                var getCSGOAffinity = $"Get-Process csgo | Select-Object ProcessorAffinity";
-                
-                powershell.Commands.AddScript(getCSGOAffinity);
-                var csgo = powershell.Invoke();
-                var csgoAffinityValue = (IntPtr)csgo[0].Members["ProcessorAffinity"].Value;
+                totalCSGOAffinity = ProcCSGO[0].ProcessorAffinity;
+                IntPtr preferedCores = GetAllExceptFirstCore(totalCSGOAffinity);
 
-                if (csgoAffinityValue == allCore)
+                if (csgoCheck.Checked)
                 {
                     var setAffinity = $"$Process = Get-Process csgo; $Process.ProcessorAffinity={preferedCores}";
                     powershell.Commands.AddScript(setAffinity);
@@ -47,7 +48,7 @@ namespace AffinityChanger
                 }
                 else //revert
                 {
-                    var setAffinity = $"$Process = Get-Process csgo; $Process.ProcessorAffinity={allCore}";
+                    var setAffinity = $"$Process = Get-Process csgo; $Process.ProcessorAffinity={totalPCCore}";
                     powershell.Commands.AddScript(setAffinity);
                     powershell.Invoke();
                     var error = powershell.Streams.Error;
@@ -67,18 +68,14 @@ namespace AffinityChanger
             var powershell = PowerShell.Create();
             Process[] ProcFACEIT = Process.GetProcessesByName("faceitclient");
             
+
             IntPtr preferedCores = (IntPtr)0x1;  //for faceit only 0 core;
-            IntPtr allCore = GetSystemCoreCount(true);
 
             if(ProcFACEIT.Length != 0)
             {
-                var getFACEITAffinity = $"Get-Process faceitclient | Select-Object ProcessorAffinity";
-                powershell.Commands.AddScript(getFACEITAffinity);
+                totalFaceitAffinity = ProcFACEIT[0].ProcessorAffinity;
 
-                var faceit = powershell.Invoke();
-                var faceitAffinityValue = (IntPtr)faceit[0].Members["ProcessorAffinity"].Value;
-
-                if (faceitAffinityValue == allCore)
+                if (faceitCheck.Checked)
                 {
                     var setAffinity = $"$Process = Get-Process faceitclient; $Process.ProcessorAffinity={preferedCores}";
                     powershell.Commands.AddScript(setAffinity);
@@ -89,10 +86,9 @@ namespace AffinityChanger
                 }
                 else //revert
                 {
-                    var setAffinity = $"$Process = Get-Process faceitclient; $Process.ProcessorAffinity={allCore}";
+                    var setAffinity = $"$Process = Get-Process faceitclient; $Process.ProcessorAffinity={totalPCCore}";
                     powershell.Commands.AddScript(setAffinity);
                     powershell.Invoke();
-
                     var error = powershell.Streams.Error;
                     label2.Text = "";
                 }
@@ -110,47 +106,14 @@ namespace AffinityChanger
             Application.Exit();
         }
 
-        //testing
-        //private void button1_Click(object sender, EventArgs e)
-        //{
-        //    using (Process chromeProcess = Process.GetProcessesByName("chrome")[0])
-        //    {
-        //        var aff = chromeProcess.ProcessorAffinity;
-        //        chromeProcess.ProcessorAffinity = (IntPtr)7;
-        //        var affNew = chromeProcess.ProcessorAffinity;
-        //        var asd = affNew;
-
-        //    }
-        //}
-
-        public IntPtr GetSystemCoreCount(bool AllCore)
+        public IntPtr GetAllExceptFirstCore(IntPtr totalCore)
         {
-            var cpuCount = Environment.ProcessorCount;
-            string totalLogicalProcessor = "0x";
-            string totalExceptFirstCore = "0x";
-            var fLimit = cpuCount / 4;
-
-            for (int i = 0; i < fLimit; i++)
-            {
-                totalLogicalProcessor = totalLogicalProcessor + "f";
-                if (fLimit - 1 == i)
-                {
-                    totalExceptFirstCore = totalLogicalProcessor.Remove(totalLogicalProcessor.Length - 1, 1) + "e";
-                }
-            }
-
-            IntPtr allAffinity = new IntPtr(Convert.ToInt32(totalLogicalProcessor, 16));
-            IntPtr allExceptFirst = new IntPtr(Convert.ToInt32(totalExceptFirstCore, 16));
-
-            if (AllCore)
-            {
-                return allAffinity;
-            }
-            else
-            {
-                return allExceptFirst;
-            }
-
+            int totalAsDecimal = (int)totalCore;
+            var hexVal = totalAsDecimal.ToString("X");
+            var totalExceptFirstCore = hexVal.Remove(hexVal.Length - 1, 1) + "e";
+            IntPtr allexceptFirst = new IntPtr(Convert.ToInt32(totalExceptFirstCore, 16));
+            return allexceptFirst;
+            
         }
 
     }
